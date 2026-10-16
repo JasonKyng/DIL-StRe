@@ -1,0 +1,86 @@
+train_dataset:
+  dataset:
+    name: image-folder
+    args:
+      root_path: /gpfs/home/int/xxx/Datasets/SCIData/SCI1K-Train/HR
+      repeat: 20
+      cache: in_memory
+  wrapper:
+    name: sr-implicit-downsampled
+    args:
+      inp_size: 48
+      scale_max: 4
+      scale_min: 1
+      augment: True
+      sample_q: 2304 
+      cell_decode: True
+  batch_size: 16
+
+val_dataset:
+  dataset:
+    name: image-folder
+    args:
+      root_path: /gpfs/home/int/xxx/Datasets/SCIData/SCI1K-Test/X2/HR
+      first_k: ~
+      repeat: 1
+      cache: in_memory
+  wrapper:
+    name: sr-implicit-downsampled
+    args:
+      inp_size: 48
+      scale_max: 4
+      scale_min: 1
+      sample_q: 2304
+      cell_decode: True
+  batch_size: 16
+
+# val_dataset:
+#   dataset:
+#     name: paired-image-folders
+#     args:
+#       root_path_1: /gpfs/home/int/xxx/Datasets/SCIData/SCI1K-Test/X10/LR
+#       root_path_2: /gpfs/home/int/xxx/Datasets/SCIData/SCI1K-Test/X10/HR
+#   wrapper:
+#     name: sr-implicit-paired
+#     args: {}
+#   batch_size: 1
+# eval_type: sci1k-10
+# eval_bsize: 50000
+
+data_norm:
+  inp: {sub: [0.5], div: [0.5]}
+  gt: {sub: [0.5], div: [0.5]}
+
+model:
+  name: btc
+  args:
+    encoder_spec:
+      name: rdn
+      args:
+        no_upsampling: True
+        
+    imnet_spec:
+      name: mlp
+      args:
+        in_dim: 4
+        out_dim: 3
+        hidden_list: [256,256,256,256]
+        act: 'relu'
+
+    basis_ord: 3
+
+optimizer:
+  name: adam
+  args:
+    lr: 1.e-4
+epoch_max: 1000
+multi_step_lr:
+  milestones: [200, 400, 600, 800]
+  gamma: 0.5
+
+epoch_val: 1
+epoch_save: 100
+eval_bsize: 16
+
+resume: ~
+pre_train: /gpfs/home/int/xxx/Projects/btc/ckpt/rdn+btc-3rd.pth
